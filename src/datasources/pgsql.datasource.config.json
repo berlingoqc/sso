@@ -1,0 +1,10 @@
+{
+  "name": "pgsql",
+  "connector": "postgresql",
+  "url": "",
+  "host": "localhost",
+  "port": 5432,
+  "user": "mercadex_user",
+  "password": "office",
+  "database": "mercadex"
+}

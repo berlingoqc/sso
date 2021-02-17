@@ -1,0 +1,93 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mercadex-sso
+spec:
+  type: LoadBalancer
+  selector:
+    app: mercadex-sso
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mercadex-sso
+spec:
+  selector:
+    matchLabels:
+      app: mercadex-sso
+  template:
+    metadata:
+      labels:
+        app: mercadex-sso
+    spec:
+      containers:
+        - name: mercadex-sso
+          image: alborea/alborea-sso
+          env:
+            - name: SSO_SETTINGS
+              valueFrom:
+                secretKeyRef:
+                  name: sso-settings
+                  key: sso-settings
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mercadex-db
+                  key: mercadex-db
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: jwt-secret
+            - name: JWT_TTL
+              value: '600'
+            - name: OTP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: otp-secret
+                  key: otp-secret
+            - name: EMAIL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: email-user
+                  key: email-user
+            - name: EMAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: email-from
+                  key: email-from
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: email-password
+                  key: email-password
+            - name: EMAIL_REDIRECT
+              valueFrom:
+                secretKeyRef:
+                  name: email-redirect
+                  key: email-redirect
+            - name: SMS_SID
+              valueFrom:
+                secretKeyRef:
+                  name: sms-sid
+                  key: sms-sid
+            - name: SMS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sms-token
+                  key: sms-token
+            - name: SMS_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: sms-number
+                  key: sms-number
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+      imagePullSecrets:
+        - name: regcred
