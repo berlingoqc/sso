@@ -25,7 +25,7 @@ import {OPERATION_SECURITY_SPEC} from '@berlingoqc/lb-extensions';
 import {Organisation, OrgUserLink, User, Role} from '../models';
 import {OrganisationRepository, OrgUserLinkRepository} from '../repositories';
 import {OrganisationService} from '../services/organisation.service';
-const uuidv1 = require('uuid/v1');
+const {v1: uuidv1} = require('uuid');
 
 export class OrganisationController {
   constructor(

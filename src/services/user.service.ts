@@ -1,12 +1,12 @@
-import { UserService } from '@loopback/authentication';
-import { inject } from '@loopback/context';
-import { service } from '@loopback/core';
-import { repository } from '@loopback/repository';
-import { HttpErrors } from '@loopback/rest';
-import { securityId, UserProfile } from '@loopback/security';
+import {UserService} from '@loopback/authentication';
+import {inject} from '@loopback/context';
+import {service} from '@loopback/core';
+import {repository} from '@loopback/repository';
+import {HttpErrors} from '@loopback/rest';
+import {securityId, UserProfile} from '@loopback/security';
 import _ from 'lodash';
-import { OTPBindings, PasswordHasherBindings, SSOBindings } from '../key';
-import { UserCredentials, UserRoleMapping } from '../models';
+import {OTPBindings, PasswordHasherBindings, SSOBindings} from '../key';
+import {UserCredentials, UserRoleMapping} from '../models';
 import {
   NewUserRequest,
   PasswordConfig,
@@ -21,15 +21,15 @@ import {
   UserCredentialsRepository,
   ExtraFieldRepository,
 } from '../repositories';
-import { Credentials, UserRepository } from '../repositories/user.repository';
-import { SSOSettings } from '../settings';
-import { AuthFactorSender } from './auth-factor/ifactor.service';
-import { EmailSenderService } from './email.service';
-import { PasswordHasher } from './hash.password.bcryptjs';
-import { RoleService } from './role.service';
+import {Credentials, UserRepository} from '../repositories/user.repository';
+import {SSOSettings} from '../settings';
+import {AuthFactorSender} from './auth-factor/ifactor.service';
+import {EmailSenderService} from './email.service';
+import {PasswordHasher} from './hash.password.bcryptjs';
+import {RoleService} from './role.service';
 
-const { hotp } = require('node-otp');
-const uuidv1 = require('uuid/v1');
+const {hotp} = require('node-otp');
+const {v1: uuidv1} = require('uuid');
 
 export class MyUserService implements UserService<User, Credentials> {
   constructor(
@@ -52,10 +52,10 @@ export class MyUserService implements UserService<User, Credentials> {
     public extraFieldRepo: ExtraFieldRepository,
     @service(RoleService)
     public roleService: RoleService,
-  ) { }
+  ) {}
 
   async verifyCredentials(credentials: Credentials): Promise<User> {
-    const { foundUser, credentialsFound } = await this.getUserAndCredentail(
+    const {foundUser, credentialsFound} = await this.getUserAndCredentail(
       credentials.email,
     );
 
@@ -66,7 +66,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
     if (!passwordMatched) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.INVALID_PASSWORD, data: {} }),
+        JSON.stringify({code: UserServiceError.INVALID_PASSWORD, data: {}}),
       );
     }
 
@@ -75,7 +75,7 @@ export class MyUserService implements UserService<User, Credentials> {
       credentialsFound.activationCode !== ''
     ) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.NOT_VALIDATE_EMAIL }),
+        JSON.stringify({code: UserServiceError.NOT_VALIDATE_EMAIL}),
       );
     }
 
@@ -85,13 +85,13 @@ export class MyUserService implements UserService<User, Credentials> {
       foundUser.validUntil * 1000 <= Date.now()
     ) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.EXPIRED_ACCOUNT }),
+        JSON.stringify({code: UserServiceError.EXPIRED_ACCOUNT}),
       );
     }
 
     if (foundUser.blocked) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.BLOCKED_ACCOUNT }),
+        JSON.stringify({code: UserServiceError.BLOCKED_ACCOUNT}),
       );
     }
 
@@ -115,7 +115,9 @@ export class MyUserService implements UserService<User, Credentials> {
   async createAdmin(newUserRequest: NewUserRequest): Promise<User> {
     await this.validatePassword(newUserRequest.password);
 
-    const password = await this.passwordHasher.hashPassword(newUserRequest.password);
+    const password = await this.passwordHasher.hashPassword(
+      newUserRequest.password,
+    );
     newUserRequest.id = uuidv1();
     try {
       const savedUser = await this.userRepository.create(
@@ -132,7 +134,6 @@ export class MyUserService implements UserService<User, Credentials> {
     } catch (error) {
       throw error;
     }
-
   }
 
   async createUser(newUserRequest: NewUserRequest): Promise<User> {
@@ -154,7 +155,7 @@ export class MyUserService implements UserService<User, Credentials> {
       );
       console.log(savedUser);
 
-      const otp = hotp({ secret: this.secret });
+      const otp = hotp({secret: this.secret});
       await this.userRepository.userCredentials(savedUser.id).create({
         password,
         id: uuidv1(),
@@ -187,7 +188,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
   async addDefaultExtraFieldsValue(extraFields: {
     [id: string]: unknown;
-  }): Promise<{ [id: string]: unknown }> {
+  }): Promise<{[id: string]: unknown}> {
     const fields: any = {};
     const extras = await this.extraFieldRepo.find();
     extras.forEach((extraField) => {
@@ -233,8 +234,8 @@ export class MyUserService implements UserService<User, Credentials> {
   }
 
   async passwordReset(reset: PasswordResetRequest): Promise<void> {
-    const { credentialsFound } = await this.getUserAndCredentail(reset.email);
-    const otp = hotp({ secret: this.secret });
+    const {credentialsFound} = await this.getUserAndCredentail(reset.email);
+    const otp = hotp({secret: this.secret});
     await this.userCredRepo.updateById(credentialsFound.id, {
       passwordResetCode: otp,
     });
@@ -250,7 +251,7 @@ export class MyUserService implements UserService<User, Credentials> {
     otp: string,
     newPassword: string,
   ): Promise<void> {
-    const profile = await this.userRepository.findOne({ where: { email } });
+    const profile = await this.userRepository.findOne({where: {email}});
     if (!profile) {
       throw new Error();
     }
@@ -268,7 +269,7 @@ export class MyUserService implements UserService<User, Credentials> {
     });
     if (!d) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.INVALID_PASSWORD, data: {} }),
+        JSON.stringify({code: UserServiceError.INVALID_PASSWORD, data: {}}),
       );
     }
 
@@ -281,10 +282,10 @@ export class MyUserService implements UserService<User, Credentials> {
   }
 
   async validActivationCode(email: string, otp: string) {
-    const { credentialsFound } = await this.getUserAndCredentail(email);
+    const {credentialsFound} = await this.getUserAndCredentail(email);
     if (!credentialsFound || !email) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.NO_CREDENTIALS, data: {} }),
+        JSON.stringify({code: UserServiceError.NO_CREDENTIALS, data: {}}),
       );
     }
     console.log(credentialsFound.activationCode);
@@ -294,7 +295,7 @@ export class MyUserService implements UserService<User, Credentials> {
       credentialsFound.activationCode === ''
     ) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.ALREADY_VALIDATE }),
+        JSON.stringify({code: UserServiceError.ALREADY_VALIDATE}),
       );
     } else {
       if (credentialsFound.activationCode === otp) {
@@ -315,7 +316,7 @@ export class MyUserService implements UserService<User, Credentials> {
   async setPhoneFactor(userProfil: User, phone: string): Promise<void> {
     if (userProfil) {
       userProfil.phone = phone;
-      userProfil.phoneActivationCode = hotp({ secret: this.secret });
+      userProfil.phoneActivationCode = hotp({secret: this.secret});
 
       await this.userRepository.update(userProfil);
 
@@ -325,7 +326,7 @@ export class MyUserService implements UserService<User, Credentials> {
       );
     } else {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError, data: {} }),
+        JSON.stringify({code: UserServiceError, data: {}}),
       );
     }
   }
@@ -339,7 +340,7 @@ export class MyUserService implements UserService<User, Credentials> {
     );
     if (!credentialsFound) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.NO_CREDENTIALS, data: {} }),
+        JSON.stringify({code: UserServiceError.NO_CREDENTIALS, data: {}}),
       );
     }
 
@@ -349,7 +350,7 @@ export class MyUserService implements UserService<User, Credentials> {
     );
     if (!passwordMatched) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.INVALID_PASSWORD, data: {} }),
+        JSON.stringify({code: UserServiceError.INVALID_PASSWORD, data: {}}),
       );
     }
     await this.validatePassword(update.new);
@@ -361,20 +362,19 @@ export class MyUserService implements UserService<User, Credentials> {
     });
   }
 
-
   async getUser(email: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { email }
+      where: {email},
     });
   }
 
   async getUserAndCredentail(
     email: string,
-  ): Promise<{ foundUser: User; credentialsFound: UserCredentials }> {
+  ): Promise<{foundUser: User; credentialsFound: UserCredentials}> {
     const foundUser = await this.getUser(email);
     if (!foundUser) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.INVALID_EMAIL, data: {} }),
+        JSON.stringify({code: UserServiceError.INVALID_EMAIL, data: {}}),
       );
     }
 
@@ -383,11 +383,11 @@ export class MyUserService implements UserService<User, Credentials> {
     );
     if (!credentialsFound) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.NO_CREDENTIALS, data: {} }),
+        JSON.stringify({code: UserServiceError.NO_CREDENTIALS, data: {}}),
       );
     }
 
-    return { foundUser, credentialsFound };
+    return {foundUser, credentialsFound};
   }
 
   convertToUserProfile(user: User): UserProfile {
@@ -398,6 +398,6 @@ export class MyUserService implements UserService<User, Credentials> {
       userName = user.firstName
         ? `${userName} ${user.lastName}`
         : `${user.lastName}`;
-    return { [securityId]: user.id, name: userName, id: user.id };
+    return {[securityId]: user.id, name: userName, id: user.id};
   }
 }

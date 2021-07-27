@@ -4,24 +4,24 @@ import {
   service,
   inject,
 } from '@loopback/core';
-import { MyUserService } from './user.service';
-import { repository } from '@loopback/repository';
+import {MyUserService} from './user.service';
+import {repository} from '@loopback/repository';
 import {
   OrganisationInvitationRepository,
   UserRepository,
   UserCredentialsRepository,
   OrgUserLinkRepository,
 } from '../repositories';
-import { HttpErrors } from '@loopback/rest';
-import { User, UserServiceError, throwError } from '../models';
-import { EmailSenderService } from './email.service';
-import { OTPBindings, PasswordHasherBindings } from '../key';
-import { PasswordHasher } from './hash.password.bcryptjs';
+import {HttpErrors} from '@loopback/rest';
+import {User, UserServiceError, throwError} from '../models';
+import {EmailSenderService} from './email.service';
+import {OTPBindings, PasswordHasherBindings} from '../key';
+import {PasswordHasher} from './hash.password.bcryptjs';
 
-const { hotp } = require('node-otp');
-const uuidv1 = require('uuid/v1');
+const {hotp} = require('node-otp');
+const {v1: uuidv1} = require('uuid');
 
-@bind({ scope: BindingScope.TRANSIENT })
+@bind({scope: BindingScope.TRANSIENT})
 export class InvitationService {
   constructor(
     @inject(OTPBindings.SECRET) private secret: string,
@@ -36,7 +36,7 @@ export class InvitationService {
     public orgInvitationRepo: OrganisationInvitationRepository,
     @repository(UserCredentialsRepository)
     public userCredRepo: UserCredentialsRepository,
-  ) { }
+  ) {}
 
   // Invite un usager dans une organisation, invite a rejoindre la plateforme s'il n'a pas de compte
   async inviteUserToOrganisation(
@@ -59,7 +59,7 @@ export class InvitationService {
   // Ajout une demande d'invitation au group a un usager existant
   async sendOrganisationInvitation(user: User, organisationId: string) {
     if (!user.id) {
-      throwError(15, { msg: 'User dont have an id for the org invitation' });
+      throwError(15, {msg: 'User dont have an id for the org invitation'});
     }
     await this.orgInvitationRepo.create({
       organisationId,
@@ -93,7 +93,7 @@ export class InvitationService {
     );
     try {
       const savedUser = await this.userRepository.create(newUser);
-      const otp = hotp({ secret: this.secret });
+      const otp = hotp({secret: this.secret});
       await this.userRepository.userCredentials(savedUser.id).create({
         password: undefined,
         id: uuidv1(),
@@ -124,12 +124,12 @@ export class InvitationService {
     otp: string,
     password: string,
   ): Promise<void> {
-    const { credentialsFound } = await this.userService.getUserAndCredentail(
+    const {credentialsFound} = await this.userService.getUserAndCredentail(
       email,
     );
     if (!credentialsFound) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.NO_CREDENTIALS, data: {} }),
+        JSON.stringify({code: UserServiceError.NO_CREDENTIALS, data: {}}),
       );
     }
     console.log(credentialsFound.activationCode);
@@ -139,7 +139,7 @@ export class InvitationService {
       credentialsFound.activationCode === ''
     ) {
       throw new HttpErrors.Unauthorized(
-        JSON.stringify({ code: UserServiceError.ALREADY_VALIDATE }),
+        JSON.stringify({code: UserServiceError.ALREADY_VALIDATE}),
       );
     } else {
       if (credentialsFound.activationCode === otp) {
@@ -151,7 +151,7 @@ export class InvitationService {
         });
       } else {
         throw new HttpErrors.Unauthorized(
-          JSON.stringify({ code: UserServiceError.INVALID_PASSWORD }),
+          JSON.stringify({code: UserServiceError.INVALID_PASSWORD}),
         );
       }
     }

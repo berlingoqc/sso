@@ -22,7 +22,7 @@ RUN echo "//npm.pkg.github.com/:_authToken=$GITHUB_ACCESS_TOKEN" >> .npmrc
 # where available (npm@5+)
 COPY --chown=node package*.json ./
 
-RUN npm install
+RUN npm ci
 
 # Bundle app source code
 COPY --chown=node . .

@@ -1,18 +1,17 @@
-import { bind, BindingScope, service } from '@loopback/core';
-import { Count,repository, Filter } from '@loopback/repository';
-import { UserProfile } from '@loopback/security';
-import { User, Organisation, Role, UserServiceError } from '../models';
-import { OrganisationRepository, RoleRepository } from '../repositories';
-import { InvitationService } from './invitation.service';
-import { MyUserService } from './user.service';
-import { HttpErrors } from '@loopback/rest';
-import { OrgUserLinkRepository } from "../repositories/org-user-link.repository";
+import {bind, BindingScope, service} from '@loopback/core';
+import {Count, repository, Filter} from '@loopback/repository';
+import {UserProfile} from '@loopback/security';
+import {User, Organisation, Role, UserServiceError} from '../models';
+import {OrganisationRepository, RoleRepository} from '../repositories';
+import {InvitationService} from './invitation.service';
+import {MyUserService} from './user.service';
+import {HttpErrors} from '@loopback/rest';
+import {OrgUserLinkRepository} from '../repositories/org-user-link.repository';
 
-const uuidv1 = require('uuid/v1')
+const {v1: uuidv1} = require('uuid');
 
-@bind({ scope: BindingScope.TRANSIENT })
+@bind({scope: BindingScope.TRANSIENT})
 export class OrganisationService {
-
   constructor(
     @repository(RoleRepository)
     public roleRepository: RoleRepository,
@@ -23,17 +22,18 @@ export class OrganisationService {
     @service(InvitationService)
     public invitationService: InvitationService,
     @service(MyUserService)
-    public userService: MyUserService
-  ) {
-
-  }
+    public userService: MyUserService,
+  ) {}
 
   async createOrganisation(organisation: Organisation): Promise<Organisation> {
     organisation.id = uuidv1();
     if (organisation.managerId) {
       organisation = await this.organisationRepository.create(organisation);
 
-      const user = await this.invitationService.inviteUserToOrganisation(organisation.managerId as string, organisation.id)
+      const user = await this.invitationService.inviteUserToOrganisation(
+        organisation.managerId as string,
+        organisation.id,
+      );
 
       organisation.managerId = user.id;
       return this.organisationRepository.save(organisation);
@@ -49,27 +49,31 @@ export class OrganisationService {
       where: {
         or: [
           {
-            orgId: org.id
+            orgId: org.id,
           },
           {
-            orgType: org.type
-          }
-        ]
-      }
-    })
+            orgType: org.type,
+          },
+        ],
+      },
+    });
   }
 
   async getUsersCount(orgId: string, where?: any): Promise<Count> {
     return this.orgUserLinkRepo.count({
-        organisationId: orgId
+      organisationId: orgId,
     });
   }
 
-  async getUsers(currentUserProfile: UserProfile, orgId: string, filter?: Filter<User>): Promise<User[]> {
+  async getUsers(
+    currentUserProfile: UserProfile,
+    orgId: string,
+    filter?: Filter<User>,
+  ): Promise<User[]> {
     const data = await this.organisationRepository.findOne({
       where: {
         id: orgId,
-        managerId: currentUserProfile.id
+        managerId: currentUserProfile.id,
       },
       include: [
         {
@@ -83,30 +87,30 @@ export class OrganisationService {
               {
                 relation: 'user',
                 scope: {
-                    include: [
-                        {
-                            relation: "userCredentials"
-                        }
-                    ]
-                }
+                  include: [
+                    {
+                      relation: 'userCredentials',
+                    },
+                  ],
+                },
               },
               {
-                relation: 'userRoleMappings'
-              }
-            ]
-          }
-        }
-      ]
+                relation: 'userRoleMappings',
+              },
+            ],
+          },
+        },
+      ],
     });
     if (data) {
-      return data.users.map(userLink => {
+      return data.users.map((userLink) => {
         const user = userLink.user as User;
         user.roles = userLink.userRoleMappings;
         return user;
-      })
+      });
     }
     throw new HttpErrors.Unauthorized(
-      JSON.stringify({ code: UserServiceError.NOT_MANAGER, })
-    )
+      JSON.stringify({code: UserServiceError.NOT_MANAGER}),
+    );
   }
 }
