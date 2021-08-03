@@ -13,7 +13,7 @@ import {
   SSOBindings,
 } from './key';
 import {JWTService, BcryptHasher} from './services';
-import {MyUserService} from './services/user.service';
+import {MyMyUserService, MyUserService} from './services/user.service';
 
 import {SSOSettings} from './settings';
 import {PasswordConfig} from './models';
@@ -106,6 +106,6 @@ export class StarterApplication extends BootMixin(
 
     this.bind(PasswordHasherBindings.ROUNDS).to(10);
     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
-    this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
+    this.bind(UserServiceBindings.USER_SERVICE).toClass(MyMyUserService);
   }
 }

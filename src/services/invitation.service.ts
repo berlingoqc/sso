@@ -15,7 +15,7 @@ import {
 import {HttpErrors} from '@loopback/rest';
 import {User, UserServiceError, throwError} from '../models';
 import {EmailSenderService} from './email.service';
-import {OTPBindings, PasswordHasherBindings} from '../key';
+import {OTPBindings, PasswordHasherBindings, UserServiceBindings} from '../key';
 import {PasswordHasher} from './hash.password.bcryptjs';
 
 const {hotp} = require('node-otp');

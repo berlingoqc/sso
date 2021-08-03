@@ -36,7 +36,7 @@ import {
 } from '../repositories';
 import {PasswordHasher} from '../services';
 import {EmailSenderService} from '../services/email.service';
-import {MyUserService} from '../services/user.service';
+import {MyMyUserService, MyUserService} from '../services/user.service';
 import {CountSchema} from '@loopback/repository/dist/common-types';
 import {getWhereSchemaFor} from '@loopback/openapi-v3/dist/filter-schema';
 
@@ -84,7 +84,9 @@ export class UserController {
     @inject(TokenServiceBindings.TOKEN_SERVICE)
     public jwtService: TokenService,
     @inject(UserServiceBindings.USER_SERVICE)
-    public userService: MyUserService,
+    public myUserService: MyMyUserService,
+    @service(MyUserService)
+    private userService: MyUserService,
     @service(EmailSenderService)
     public emailService: EmailSenderService,
   ) {}
@@ -147,8 +149,8 @@ export class UserController {
   async login(
     @requestBody() credentials: Credentials,
   ): Promise<{token: string}> {
-    const user = await this.userService.verifyCredentials(credentials);
-    const userProfile = this.userService.convertToUserProfile(user);
+    const user = await this.myUserService.verifyCredentials(credentials);
+    const userProfile = this.myUserService.convertToUserProfile(user);
     const token = await this.jwtService.generateToken(userProfile as any);
 
     return {token};

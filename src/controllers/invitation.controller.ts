@@ -1,8 +1,8 @@
 // Uncomment these imports to begin using these cool features!
 
-import { authenticate } from '@loopback/authentication';
-import { authorize } from '@loopback/authorization';
-import { service, inject } from '@loopback/core';
+import {authenticate} from '@loopback/authentication';
+import {authorize} from '@loopback/authorization';
+import {service, inject} from '@loopback/core';
 import {
   getModelSchemaRef,
   param,
@@ -12,16 +12,16 @@ import {
   get,
   del,
 } from '@loopback/rest';
-import { AcceptedInvitation, User } from '../models';
-import { InvitationService } from '../services';
-import { SecurityBindings, UserProfile } from '@loopback/security';
+import {AcceptedInvitation, User} from '../models';
+import {InvitationService} from '../services';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 
 // import {inject} from '@loopback/context';
 
 export class InvitationController {
   constructor(
     @service(InvitationService) public invitationService: InvitationService,
-  ) { }
+  ) {}
 
   @patch('/invitation/users')
   async acceptInviteUser(
@@ -116,7 +116,7 @@ export class InvitationController {
     currentUserProfile: UserProfile,
   ) {
     return this.invitationService.orgInvitationRepo.find({
-      where: { userId: currentUserProfile.id },
+      where: {userId: currentUserProfile.id},
       include: [
         {
           relation: 'organisation',
@@ -128,7 +128,7 @@ export class InvitationController {
   @get('/invitation/org/{id}')
   @authenticate('jwt')
   @authorize({
-    allowedRoles: ['ORG_USER_MANAGER'],
+    allowedRoles: ['ADMIN', 'ORG_USER_MANAGER'],
   })
   async getOrganisationInvitation(@param.path.string('id') id: string) {
     return this.invitationService.orgInvitationRepo.find({

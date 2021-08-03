@@ -96,6 +96,33 @@ export class OrganisationController {
     return this.organisationRepository.find(filter);
   }
 
+  @get('/organisations/count', {
+    security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'Array of Organisation model instances',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: getModelSchemaRef(Organisation, {includeRelations: true}),
+            },
+          },
+        },
+      },
+    },
+  })
+  @authenticate('jwt')
+  @authorize({
+    allowedRoles: ['ADMIN', 'ORG_USER_MANAGER'],
+  })
+  async findCount(
+    @param.query.object('where', getWhereSchemaFor(Organisation))
+    where?: Where<Organisation>,
+  ): Promise<Count> {
+    return this.organisationRepository.count(where);
+  }
+
   @patch('/organisations', {
     security: OPERATION_SECURITY_SPEC,
     responses: {
@@ -208,7 +235,7 @@ export class OrganisationController {
     },
   })
   @authorize({
-    allowedRoles: ['USER_ORG_MANAGER'],
+    allowedRoles: ['ADMIN', 'USER_ORG_MANAGER'],
   })
   async addUserToOrg(
     @param.path.string('id') id: string,
@@ -263,7 +290,7 @@ export class OrganisationController {
   })
   @authenticate('jwt')
   @authorize({
-    allowedRoles: ['ADMIN'],
+    allowedRoles: ['ADMIN', 'ORG_USER_MANAGER'],
   })
   async updateById(
     @param.path.string('id') id: string,
@@ -289,7 +316,7 @@ export class OrganisationController {
   })
   @authenticate('jwt')
   @authorize({
-    allowedRoles: ['ADMIN'],
+    allowedRoles: ['ADMIN', 'ORG_USER_MANAGER'],
   })
   async replaceById(
     @param.path.string('id') id: string,
@@ -307,7 +334,7 @@ export class OrganisationController {
   })
   @authenticate('jwt')
   @authorize({
-    allowedRoles: ['ADMIN'],
+    allowedRoles: ['ADMIN', 'ORG_USER_MANAGER'],
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.organisationRepository.deleteById(id);

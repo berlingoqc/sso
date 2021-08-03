@@ -1,5 +1,5 @@
 import {UserService} from '@loopback/authentication';
-import {inject} from '@loopback/context';
+import {bind, BindingScope, inject, injectable} from '@loopback/context';
 import {service} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
@@ -31,7 +31,8 @@ import {RoleService} from './role.service';
 const {hotp} = require('node-otp');
 const {v1: uuidv1} = require('uuid');
 
-export class MyUserService implements UserService<User, Credentials> {
+@bind({scope: BindingScope.TRANSIENT})
+export class MyUserService {
   constructor(
     @repository(UserRepository) public userRepository: UserRepository,
     @repository(EmailTemplateRepository)
@@ -53,50 +54,6 @@ export class MyUserService implements UserService<User, Credentials> {
     @service(RoleService)
     public roleService: RoleService,
   ) {}
-
-  async verifyCredentials(credentials: Credentials): Promise<User> {
-    const {foundUser, credentialsFound} = await this.getUserAndCredentail(
-      credentials.email,
-    );
-
-    const passwordMatched = await this.passwordHasher.comparePassword(
-      credentials.password,
-      credentialsFound.password,
-    );
-
-    if (!passwordMatched) {
-      throw new HttpErrors.Unauthorized(
-        JSON.stringify({code: UserServiceError.INVALID_PASSWORD, data: {}}),
-      );
-    }
-
-    if (
-      credentialsFound.activationCode &&
-      credentialsFound.activationCode !== ''
-    ) {
-      throw new HttpErrors.Unauthorized(
-        JSON.stringify({code: UserServiceError.NOT_VALIDATE_EMAIL}),
-      );
-    }
-
-    if (
-      foundUser.validUntil &&
-      foundUser.validUntil !== 0 &&
-      foundUser.validUntil * 1000 <= Date.now()
-    ) {
-      throw new HttpErrors.Unauthorized(
-        JSON.stringify({code: UserServiceError.EXPIRED_ACCOUNT}),
-      );
-    }
-
-    if (foundUser.blocked) {
-      throw new HttpErrors.Unauthorized(
-        JSON.stringify({code: UserServiceError.BLOCKED_ACCOUNT}),
-      );
-    }
-
-    return foundUser;
-  }
 
   async createDefaultRole(user: User): Promise<UserRoleMapping[]> {
     if (this.settings.defaultRoles && this.settings.defaultRoles.length > 0) {
@@ -388,6 +345,59 @@ export class MyUserService implements UserService<User, Credentials> {
     }
 
     return {foundUser, credentialsFound};
+  }
+}
+
+export class MyMyUserService implements UserService<User, Credentials> {
+  constructor(
+    @service(MyUserService) private myUserService: MyUserService,
+    @inject(PasswordHasherBindings.PASSWORD_HASHER)
+    public passwordHasher: PasswordHasher,
+    @inject(PasswordHasherBindings.PASSWORD_CONFIG)
+    public passwordConfig: PasswordConfig,
+  ) {}
+
+  async verifyCredentials(credentials: Credentials): Promise<User> {
+    const {foundUser, credentialsFound} =
+      await this.myUserService.getUserAndCredentail(credentials.email);
+
+    const passwordMatched = await this.passwordHasher.comparePassword(
+      credentials.password,
+      credentialsFound.password,
+    );
+
+    if (!passwordMatched) {
+      throw new HttpErrors.Unauthorized(
+        JSON.stringify({code: UserServiceError.INVALID_PASSWORD, data: {}}),
+      );
+    }
+
+    if (
+      credentialsFound.activationCode &&
+      credentialsFound.activationCode !== ''
+    ) {
+      throw new HttpErrors.Unauthorized(
+        JSON.stringify({code: UserServiceError.NOT_VALIDATE_EMAIL}),
+      );
+    }
+
+    if (
+      foundUser.validUntil &&
+      foundUser.validUntil !== 0 &&
+      foundUser.validUntil * 1000 <= Date.now()
+    ) {
+      throw new HttpErrors.Unauthorized(
+        JSON.stringify({code: UserServiceError.EXPIRED_ACCOUNT}),
+      );
+    }
+
+    if (foundUser.blocked) {
+      throw new HttpErrors.Unauthorized(
+        JSON.stringify({code: UserServiceError.BLOCKED_ACCOUNT}),
+      );
+    }
+
+    return foundUser;
   }
 
   convertToUserProfile(user: User): UserProfile {
