@@ -1,8 +1,8 @@
-import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig, Getter} from '@loopback/core';
-import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication} from '@loopback/rest';
-import {ServiceMixin} from '@loopback/service-proxy';
+import { BootMixin } from '@loopback/boot';
+import { ApplicationConfig, Getter } from '@loopback/core';
+import { RepositoryMixin } from '@loopback/repository';
+import { RestApplication } from '@loopback/rest';
+import { ServiceMixin } from '@loopback/service-proxy';
 import {
   TokenServiceBindings,
   PasswordHasherBindings,
@@ -12,13 +12,15 @@ import {
   OTPBindings,
   SSOBindings,
 } from './key';
-import {JWTService, BcryptHasher} from './services';
-import {MyMyUserService, MyUserService} from './services/user.service';
+import { JWTService, BcryptHasher } from './services';
+import { MyMyUserService, MyUserService } from './services/user.service';
 
-import {SSOSettings} from './settings';
-import {PasswordConfig} from './models';
+import { SSOSettings } from './settings';
+import { PasswordConfig } from './models';
 
-import {AlbAuthMixin} from '@berlingoqc/lb-extensions';
+import { MetricsComponent } from '@loopback/metrics';
+
+import { AlbAuthMixin } from '@berlingoqc/lb-extensions';
 
 export class StarterApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(AlbAuthMixin(RestApplication))),
@@ -33,6 +35,8 @@ export class StarterApplication extends BootMixin(
     super(options);
 
     this.setUpBindings();
+
+    this.component(MetricsComponent);
   }
 
   setUpBindings(): void {
