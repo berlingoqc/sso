@@ -1,10 +1,10 @@
-import { Entity, model, property, hasOne, hasMany } from '@loopback/repository';
-import { UserCredentials } from './usercredentials.model';
-import { UserRoleMapping } from './user-role-mapping.model';
-import { OrgUserLink } from './org-user-link.model';
-import { UserProfile } from '@loopback/security';
-import { OrganisationInvitation } from './organisation-invitation.model';
-import { HttpErrors } from '@loopback/rest';
+import {Entity, model, property, hasOne, hasMany} from '@loopback/repository';
+import {UserCredentials} from './usercredentials.model';
+import {UserRoleMapping} from './user-role-mapping.model';
+import {OrgUserLink} from './org-user-link.model';
+import {UserProfile} from '@loopback/security';
+import {OrganisationInvitation} from './organisation-invitation.model';
+import {HttpErrors} from '@loopback/rest';
 
 @model({
   settings: {
@@ -26,6 +26,13 @@ export class User extends Entity {
     id: true,
   })
   id: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    default: 'user',
+  })
+  type: string;
 
   @hasMany(() => OrgUserLink)
   organisations?: OrgUserLink[];
@@ -64,12 +71,12 @@ export class User extends Entity {
   @property({
     type: 'boolean',
     required: false,
-    jsonSchema: { nullable: true }
+    jsonSchema: {nullable: true},
   })
   blocked: boolean;
 
   // compte valide jusqu'a cette date
-  @property({ required: false, jsonSchema: { nullable: true } })
+  @property({required: false, jsonSchema: {nullable: true}})
   validUntil?: number;
 
   @hasOne(() => UserCredentials)
@@ -135,12 +142,11 @@ export enum UserServiceError {
 
   INVALID_PASSWORD_FORMAT = 11,
 
-
   NOT_MANAGER = 12,
 }
 
 export function throwError(error: number, data = {}) {
-  throw new HttpErrors.Unauthorized(JSON.stringify({ code: error, data: data }));
+  throw new HttpErrors.Unauthorized(JSON.stringify({code: error, data: data}));
 }
 
 @model()

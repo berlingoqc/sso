@@ -5,3 +5,4 @@ export * from './template.controller';
 export * from './invitation.controller';
 export * from './user-org-user-link.controller';
 export * from './org-user-link-organisation.controller';
+export * from './device.controller';
