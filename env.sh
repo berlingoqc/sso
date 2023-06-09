@@ -1,5 +1,5 @@
 export SSO_SETTINGS="{\"publicCreation\":true,\"multiFactor\":false,\"accountValidation\":true, \"defaultRoles\": []}"
-export DB_URL="postgresql://doadmin:jxde4cq2itqe8i5t@xmation-postgresql-tor1-3579-do-user-6045977-0.a.db.ondigitalocean.com:25060/defaultdb?ssl=true"
+export DB_URL="postgresql://test:test@localhost:5432/defaultdb"
 export EMAIL_FROM="\"Xmation\" <info@berlingoqc.com>"
 export EMAIL_USER="apikey"
 export EMAIL_PASSWORD="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"

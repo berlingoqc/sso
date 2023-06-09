@@ -4,6 +4,7 @@ import { AlbAuthConfig } from '@berlingoqc/lb-extensions';
 export * from './models';
 export * from './utils';
 export * from './repositories';
+export * from './component';
 
 export { StarterApplication };
 
